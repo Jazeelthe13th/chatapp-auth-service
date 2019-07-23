@@ -1,0 +1,32 @@
+{
+  "name": "chatapp-auth-service",
+  "version": "1.0.0",
+  "description": "Authentication service for a sample chat application",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rimraf dist/ && babel ./ --out-dir dist/ --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files",
+    "start": "npm run build && node dist/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jazeelthe13th/chatapp-auth-service.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Jazeelthe13th/chatapp-auth-service/issues"
+  },
+  "homepage": "https://github.com/Jazeelthe13th/chatapp-auth-service#readme",
+  "dependencies": {
+    "bluebird": "^3.5.5",
+    "express": "^4.17.1",
+    "mongoose": "^5.6.5",
+    "morgan": "^1.9.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "rimraf": "^2.6.3"
+  }
+}
