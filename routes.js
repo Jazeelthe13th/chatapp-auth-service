@@ -18,6 +18,7 @@ const generateSalt = async () => {
       let salt = await randomBytes(128).then(value => { return value.toString('base64') });
       return salt;
 }
+
 const generateHash = async (password, salt, iterations = 1000) => {
 
       const hashingData = {}
@@ -37,11 +38,11 @@ const generateJWT = user => {
 
 
       let payload = {
-            data1: 'DATA1',
-            data2: 'DATA2'
+            email: user.email,
+            role: user.role
       }
       const i = 'mature.bag';
-      const s = user;
+      const s = 'subject';
       const a = 'abc@gmail.com';
 
       let signingOptions = {
@@ -49,7 +50,7 @@ const generateJWT = user => {
             subject: s,
             audience: a,
             expiresIn: '1h',
-            algorithm: 'RS256'
+            algorithm: "RS256"
       }
 
       let token = jwt.sign(payload, privateKEY, signingOptions);
@@ -58,21 +59,22 @@ const generateJWT = user => {
 
 }
 const verifyToken = async (token) => {
+     
       const i = 'mature.bag';
-      const s = "key id";
+      const s = 'subject';
       const a = 'abc@gmail.com';
 
      let verifyOptions = {
-            issuer: i,
-            subject: s,
-            audience: a,
-            expiresIn: '1h',
-            algorithm: ["RS256"]
+            iss: i,
+            sub: s,
+            aud: a,
+            exp: '1h',
+            alg: ["RS256"]
       }
 
-      let legit = jwt.verify(token, publicKEY, verifyOptions);
+      let legit =  jwt.verify(token, publicKEY, verifyOptions);
 
-      console.log('legit: ', legit);
+      //console.log('legit: ', legit);
       return legit;
 
 }
@@ -118,7 +120,7 @@ const userController = {
                               const hashingData = await generateHash(password, dbSalt, dbIterations);
 
                               if (hashingData.password == dbHashedPassword) {
-                                    const token = generateJWT(email);
+                                    const token = generateJWT(result);
                                     res.json({ status: 'ok', message: 'Your password is correct', token: token });
 
                               } else {
@@ -147,8 +149,9 @@ const userController = {
                   try {
                        let legit =  await verifyToken(token);
                        console.log('legit', legit);
+                       res.json({status: 'success', user: legit.email, message: 'JWT verified successfully!'})
                   } catch (error) {
-                        
+                        console.log('error::',error)
                         res.json({status: 'faild', error: error.name, message: error.message});
                   }
             }
