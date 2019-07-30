@@ -10,6 +10,5 @@ let userSchema = new mongoose.Schema({
     userRole: {type : String}
 });
 
-let userModel = mongoose.model('User', userSchema);
+export let userModel = mongoose.model('User', userSchema);
 
-module.exports = userModel;

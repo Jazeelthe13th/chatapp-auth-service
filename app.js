@@ -10,7 +10,7 @@ const app = express();
 // Basic logging setup
 app.use(logger('dev'));
 
-//Body Parser to handle post request data
+// Handles urlencoded requests
 app.use(bodyparser.urlencoded({
     extended:true
 }));
@@ -18,7 +18,7 @@ app.use(bodyparser.urlencoded({
 //use api routes in the app
 app.use('/user',router);
 
-// Subset of body parser. Might have to add urlencoded also
+// Handles JSON requests
 app.use(express.json());
 
 let connectToDatabase = async mongoose => {

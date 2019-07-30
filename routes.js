@@ -11,72 +11,59 @@ import jwt from 'jsonwebtoken';
 const privateKEY = fs.readFileSync('./keys/private.key', 'utf8');
 const publicKEY = fs.readFileSync('./keys/public.key', 'utf8');
 
-const router = express.Router();
+export const router = express.Router();
 
+// Random 128 byte salt for hashing
 const generateSalt = async () => {
       let randomBytes = Promise.promisify(crypto.randomBytes);
-      let salt = await randomBytes(128).then(value => { return value.toString('base64') });
-      return salt;
+      return await randomBytes(128).then(value => { return value.toString('base64') });
 }
 
+// Iterative hashing with salt
 const generateHash = async (password, salt, iterations = 1000) => {
-
       const hashingData = {}
       let pbkdf2 = Promise.promisify(crypto.pbkdf2);
       const keylen = 512;
       const digest = 'sha256';
       let hashPassword = await pbkdf2(password, salt, iterations, keylen, digest).then(key => key.toString('hex'));
-
       hashingData['password'] = hashPassword;
       hashingData['salt'] = salt;
       hashingData['iterations'] = iterations;
-
       return hashingData;
 }
 
-const generateJWT = user => {
-
-
+const generateJWT = async user => {
       let payload = {
             email: user.email,
             role: user.role
       }
-      const i = 'mature.bag';
-      const s = 'subject';
-      const a = 'abc@gmail.com';
-
+      const issuer = 'mature.bag';
+      const subject = 'subject';
+      const audience = 'abc@gmail.com';
       let signingOptions = {
-            issuer: i,
-            subject: s,
-            audience: a,
+            issuer: issuer,
+            subject: subject,
+            audience: audience,
             expiresIn: '1h',
             algorithm: "RS256"
       }
-
-      let token = jwt.sign(payload, privateKEY, signingOptions);
-
-      return token;
-
+      let sign = Promise.promisify(jwt.sign);
+      return await sign(payload, privateKEY, signingOptions).then(token => token);
 }
-const verifyToken = async (token) => {
-     
-      const i = 'mature.bag';
-      const s = 'subject';
-      const a = 'abc@gmail.com';
 
-     let verifyOptions = {
-            iss: i,
-            sub: s,
-            aud: a,
+const verifyToken = async token => {
+      const issuer = 'mature.bag';
+      const subject = 'subject';
+      const audience = 'abc@gmail.com';
+      let verifyOptions = {
+            iss: issuer,
+            sub: subject,
+            aud: audience,
             exp: '1h',
             alg: ["RS256"]
       }
-
-      let legit =  jwt.verify(token, publicKEY, verifyOptions);
-
-      //console.log('legit: ', legit);
-      return legit;
-
+      let verify = Promise.promisify(jwt.verify);
+      return await verify(token, publicKEY, verifyOptions).then(valid => valid);
 }
 
 const userController = {
@@ -89,8 +76,8 @@ const userController = {
             try {
                   const hashingData = await generateHash(password, salt);
                   console.log('hashingData: ' + JSON.stringify(hashingData));
-                  userModel.create({ email: email, password: hashingData.password, salt: hashingData.salt, iterations: hashingData.iterations }, (err, resut) => {
-                        if (err) next(err);
+                  userModel.create({ email: email, password: hashingData.password, salt: hashingData.salt, iterations: hashingData.iterations }, err => {
+                        if (err) throw err;
                         else res.json({ status: 'success', message: 'registered successfully', data: null })
                   })
             } catch (error) {
@@ -121,10 +108,10 @@ const userController = {
 
                               if (hashingData.password == dbHashedPassword) {
                                     const token = generateJWT(result);
-                                    res.json({ status: 'ok', message: 'Your password is correct', token: token });
+                                    res.json({ status: 'ok', message: 'Logged in successfully.', token: token });
 
                               } else {
-                                    res.json({ status: 'failed', message: 'Password does not matches. Try again' });
+                                    res.json({ status: 'failed', message: 'Password does not match. Try again.' });
                               }
                         } catch (error) {
                               console.log(error);
@@ -141,7 +128,7 @@ const userController = {
             
             let token = tokenBearer.replace('Bearer ','');
             //console.log('req Token :'+token);
-            const message = { auth: 'failed', message: 'Access denied. Token has not provided' };
+            const message = { auth: 'failed', message: 'Access denied. Token has not been provided' };
 
             if (!token) {
                   res.status(401).json(message);
@@ -171,7 +158,3 @@ router.route('/register').post(userController.register);
 router.route('/login').post(userController.authenticate);
 
 router.route('/chat').post(userController.authorization,userController.chat);
-
-
-
-module.exports = router;
